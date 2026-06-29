@@ -8,6 +8,9 @@ module.exports = {
   solidity: {
     version: "0.8.24",
     settings: {
+      // ⚠️ OXN/Sapphire SGX runtime 暂不支持 shanghai 的 PUSH0 指令，
+      // 必须 pin 到 paris；否则 string-return 视图调用会报 "invalid code"。
+      evmVersion: "paris",
       optimizer: { enabled: true, runs: 200 },
     },
   },

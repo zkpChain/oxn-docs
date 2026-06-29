@@ -1,5 +1,32 @@
 # 05 — FAQ / 已知坑
 
+## Q0：合约 string 返回值（`name()`/`symbol()`）报 `execution failed: invalid code`？
+
+**根因**：Solidity 0.8.20+ 默认 `evmVersion: "shanghai"`，编译产物会用 `PUSH0` (0x5F) 指令。
+OXN 当前 SGX runtime **不支持 PUSH0**，含此指令的合约在某些代码路径（尤其是 string 返回值的视图调用）会触发 "invalid code"。
+
+**症状**：相同合约里 `uint256` 类型返回值（如 `totalSupply()`、`balanceOf()`）正常，但 `string` 返回值（`name()`、`symbol()`）报错。
+
+**修法**：编译时 pin `evmVersion: "paris"`（PUSH0 引入前的版本）。
+
+- **Hardhat**：
+
+```javascript
+// hardhat.config.js
+solidity: {
+  version: "0.8.24",
+  settings: {
+    evmVersion: "paris",  // ⚠️ 必加
+    optimizer: { enabled: true, runs: 200 },
+  },
+},
+```
+
+- **Foundry**：`foundry.toml` 加 `evm_version = "paris"`
+- **solc-js**：`settings.evmVersion: "paris"`
+
+旧版 (`paris` / `london` / `berlin`) 都可，**不要用 `shanghai` 或之后的**。OXN 团队修复 PUSH0 后会同步通知。
+
 ## Q1：`eth_estimateGas` 为什么不可用？
 
 `estimateGas` 在当前 OXN 镜像下会抛 `invalid BytesLike value`（已知问题，源自加密路径下 gateway 估算失败）。

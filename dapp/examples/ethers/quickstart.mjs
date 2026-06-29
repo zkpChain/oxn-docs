@@ -59,6 +59,10 @@ function compileContract(sourcePath, contractName) {
     language: "Solidity",
     sources: { [sourcePath]: { content: readFileSync(sourcePath, "utf8") } },
     settings: {
+      // ⚠️ OXN/Sapphire SGX runtime 暂不支持 shanghai 新增的 PUSH0 (0x5F) 指令，
+      // 必须 pin 到 paris 让 solc 用旧编码方式，否则 string-return 视图调用会
+      // 报 "invalid code"
+      evmVersion: "paris",
       outputSelection: { "*": { "*": ["abi", "evm.bytecode.object"] } },
     },
   };

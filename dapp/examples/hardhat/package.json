@@ -4,15 +4,13 @@
   "private": true,
   "scripts": {
     "compile": "hardhat compile",
-    "deploy": "hardhat run scripts/deploy.js --network oxn",
-    "transfer": "hardhat run scripts/transfer.js --network oxn"
+    "deploy": "hardhat run scripts/deploy.js --network oxn_testnet",
+    "transfer": "hardhat run scripts/transfer.js --network oxn_testnet"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@oasisprotocol/sapphire-hardhat": "^2.22.0",
+    "@openzeppelin/contracts": "^5.0.0",
     "hardhat": "^2.22.0"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts": "^5.0.0"
   }
 }

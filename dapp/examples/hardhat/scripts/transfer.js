@@ -1,34 +1,35 @@
 const hre = require("hardhat");
+// deploy 后把地址填这里，或: TOKEN_ADDR=0x... npx hardhat run scripts/transfer.js --network oxn_testnet
+const TOKEN_ADDR = "xxx";
+const RECIPIENT = "0x000000000000000000000000000000000000dEaD";
 
 async function main() {
-  const TOKEN_ADDR = process.env.TOKEN_ADDR;
-  const RECIPIENT = process.env.RECIPIENT
-    || "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
-
-  if (!TOKEN_ADDR) {
-    throw new Error("请设置 TOKEN_ADDR 环境变量（来自 deploy.js 输出）");
+  let tokenAddress;
+  try {
+    tokenAddress = hre.ethers.getAddress(TOKEN_ADDR);
+  } catch {
+    throw new Error(
+      `无效的 TOKEN_ADDR: "${TOKEN_ADDR}"，请先运行 deploy 并把合约地址写入脚本`
+    );
   }
 
   const [sender] = await hre.ethers.getSigners();
-  const token = await hre.ethers.getContractAt("MyToken", TOKEN_ADDR);
+  const token = await hre.ethers.getContractAt(
+    "MyToken",
+    tokenAddress
+  );
 
-  const balBefore = await token.balanceOf(RECIPIENT);
+  console.log("sender:", sender.address);
+  console.log("sender balance before:", (await token.balanceOf(sender.address)).toString());
 
-  const amount = hre.ethers.parseUnits("100", 18);
-  const tx = await token.transfer(RECIPIENT, amount, { gasLimit: 500_000n });
-  console.log("tx hash:", tx.hash);
+  const tx = await token.transfer(
+    RECIPIENT,
+    hre.ethers.parseUnits("100", 18),
+    { gasLimit: 500_000n }
+  );
+  console.log("tx:", tx.hash);
   await tx.wait();
-
-  const balAfter = await token.balanceOf(RECIPIENT);
-  console.log("recipient delta:", (balAfter - balBefore).toString());
-
-  // 验证 calldata 已加密
-  const raw = new hre.ethers.JsonRpcProvider(hre.network.config.url);
-  const onchain = await raw.getTransaction(tx.hash);
-  const isEncrypted =
-    !onchain.data.startsWith("0xa9059cbb") &&
-    (parseInt(onchain.data.slice(2, 4), 16) & 0xe0) === 0xa0;
-  console.log("calldata encrypted:", isEncrypted ? "✅" : "❌（SDK 包裹失效）");
+  console.log("sender balance after:", (await token.balanceOf(sender.address)).toString());
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
